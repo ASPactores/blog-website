@@ -1,0 +1,48 @@
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./migrations:/app/migrations
+      - ./models.py:/app/models.py
+    networks:
+      - backend_network
+    depends_on:
+      - db
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - .venv/
+            - migrations/
+            - __pycache__/
+            - .git/
+        - action: rebuild
+          path: ./uv.lock
+
+  db:
+    container_name: db
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: password
+        POSTGRES_DB: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend_network
+
+volumes:
+  db_data:
+
+networks:
+  backend_network:
+    driver: bridge
