@@ -1,18 +1,13 @@
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, String, UUID
+from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy import (
+    Column, ForeignKey, String, DateTime, UUID, func
+)
 import uuid
 
 
-# Base = declarative_base()
-
 
 class Base(DeclarativeBase):
-    """Base class for SQLAlchemy models.
-
-    This class serves as the base for all SQLAlchemy models in the application.
-    It inherits from `DeclarativeBase`, which provides the necessary functionality
-    for SQLAlchemy's ORM (Object-Relational Mapping) system.
-    """
+    """Base class for SQLAlchemy models."""
 
     pass
 
@@ -28,20 +23,19 @@ class User(Base):
     last_name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    
+    posts = relationship("BlogPost", back_populates="author")
+class BlogPost(Base):
+    """Blog post model."""
 
+    __tablename__ = "blog_posts"
 
-class Item(Base):
-    """Item model for the application."""
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, onupdate=func.now())
+    category = Column(String, nullable=False)
 
-    __tablename__ = "items"
-    id = Column(
-        UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4
-    )
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    price = Column(
-        String, nullable=False
-    )  # Consider using a more appropriate type for price
-    quantity = Column(
-        String, nullable=False
-    )  # Consider using a more appropriate type for quantity
+    author = relationship("User", back_populates="posts")

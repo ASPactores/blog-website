@@ -13,6 +13,8 @@ services:
       - backend_network
     depends_on:
       - db
+    env_file:
+      - .env
     develop:
       watch:
         - action: sync
