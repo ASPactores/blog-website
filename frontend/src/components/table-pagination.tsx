@@ -13,14 +13,20 @@ import {
 interface PaginationProps {
   totalItems: number;
   itemsPerPage: number;
+  onPageChange: (page: number) => void;
 }
 
-export function Pagination({ totalItems, itemsPerPage }: PaginationProps) {
+export function Pagination({
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+}: PaginationProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    onPageChange(page);
   };
 
   const handlePrevious = () => {
@@ -61,7 +67,6 @@ export function Pagination({ totalItems, itemsPerPage }: PaginationProps) {
 
           {Array.from({ length: totalPages }).map((_, index) => {
             const pageNumber = index + 1;
-            // Only show current page and adjacent pages
             if (
               pageNumber === 1 ||
               pageNumber === totalPages ||
@@ -83,7 +88,6 @@ export function Pagination({ totalItems, itemsPerPage }: PaginationProps) {
               );
             }
 
-            // Show ellipsis for gaps
             if (
               (pageNumber === currentPage - 2 && pageNumber > 1) ||
               (pageNumber === currentPage + 2 && pageNumber < totalPages)

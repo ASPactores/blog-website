@@ -1,4 +1,6 @@
 "use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -9,129 +11,57 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PlusIcon, Trash2Icon, PencilIcon } from "lucide-react";
-import { Pagination } from "@/components/paginated-table";
+import { Pagination } from "@/components/table-pagination";
 import AdminLayout from "@/components/admin-layout";
-import { useRouter } from "next/navigation";
+import { useApi } from "@/hooks/use-api";
+import moment from "moment";
+
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+
+import { EditBlogDialogContent } from "@/components/update-blog-form";
+import { DeleteBlogDialog } from "@/components/delete-dialog";
+
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  created_at: string;
+}
+
+const ITEMS_PER_PAGE = 15;
 
 export default function Dashboard() {
+  const { callAPI } = useApi();
   const router = useRouter();
-  const categories = [
-    { id: 1, name: "update cat", description: "update" },
-    {
-      id: 2,
-      name: "eum",
-      description:
-        "Quis illum qui consequatur facilis. Eum nulla debitis beatissimus...",
-    },
-    {
-      id: 3,
-      name: "est",
-      description: "Error ducimus ad ut veritatis sed laboriosam voluptatem...",
-    },
-    {
-      id: 4,
-      name: "recusandae",
-      description:
-        "Dolores dolores voluptas sit facilis impedit qui ea at. Qu...",
-    },
-    {
-      id: 5,
-      name: "odio",
-      description: "Impedit provident amet debitis rerum. Minus eaque dol...",
-    },
-    {
-      id: 6,
-      name: "quasi",
-      description:
-        "Consectetur optio rem nam nulla nisi sint impedit hic. Ill...",
-    },
-    {
-      id: 7,
-      name: "sunt",
-      description: "In praesentium sit est voluptatem recusandae. Laborum ...",
-    },
-    {
-      id: 8,
-      name: "est",
-      description: "Earum magnam aut cum asperiores earum et aut. Ipsam...",
-    },
-    {
-      id: 9,
-      name: "eum",
-      description:
-        "Quis illum qui consequatur facilis. Eum nulla debitis beatissimus...",
-    },
-    {
-      id: 10,
-      name: "est",
-      description: "Error ducimus ad ut veritatis sed laboriosam voluptatem...",
-    },
-    {
-      id: 11,
-      name: "recusandae",
-      description:
-        "Dolores dolores voluptas sit facilis impedit qui ea at. Qu...",
-    },
-    {
-      id: 12,
-      name: "odio",
-      description: "Impedit provident amet debitis rerum. Minus eaque dol...",
-    },
-    {
-      id: 13,
-      name: "quasi",
-      description:
-        "Consectetur optio rem nam nulla nisi sint impedit hic. Ill...",
-    },
-    {
-      id: 14,
-      name: "sunt",
-      description: "In praesentium sit est voluptatem recusandae. Laborum ...",
-    },
-    {
-      id: 15,
-      name: "est",
-      description: "Earum magnam aut cum asperiores earum et aut. Ipsam...",
-    },
-    {
-      id: 16,
-      name: "eum",
-      description:
-        "Quis illum qui consequatur facilis. Eum nulla debitis beatissimus...",
-    },
-    {
-      id: 17,
-      name: "est",
-      description: "Error ducimus ad ut veritatis sed laboriosam voluptatem...",
-    },
-    {
-      id: 18,
-      name: "recusandae",
-      description:
-        "Dolores dolores voluptas sit facilis impedit qui ea at. Qu...",
-    },
-    {
-      id: 19,
-      name: "odio",
-      description: "Impedit provident amet debitis rerum. Minus eaque dol...",
-    },
-    {
-      id: 20,
-      name: "quasi",
-      description:
-        "Consectetur optio rem nam nulla nisi sint impedit hic. Ill...",
-    },
-    {
-      id: 21,
-      name: "sunt",
-      description: "In praesentium sit est voluptatem recusandae. Laborum ...",
-    },
-    {
-      id: 22,
-      name: "est",
-      description: "Earum magnam aut cum asperiores earum et aut. Ipsam...",
-    },
-  ];
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const fetchPosts = async (page: number) => {
+    const limit = ITEMS_PER_PAGE;
+    const offset = (page - 1) * limit;
+
+    try {
+      const data = await callAPI<null, { items: Post[]; total: number }>(
+        `/blog/posts?limit=${limit}&offset=${offset}`,
+        "GET",
+        undefined,
+        undefined,
+        true // authenticated
+      );
+
+      setPosts(data.items);
+      setTotalItems(data.total);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts(currentPage);
+  }, [currentPage]);
+
   return (
     <AdminLayout>
       <div className="mb-6 px-2">
@@ -144,33 +74,40 @@ export default function Dashboard() {
           <span>Create New Article</span>
         </Button>
       </div>
-      <div className="w-full overflow-auto border rounded-md">
-        <div className="min-w-[600px]">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs font-medium text-muted-foreground">
-                  NAME
-                </TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">
-                  DESCRIPTION
-                </TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground w-24 text-center">
-                  DELETE
-                </TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground w-24 text-center">
-                  MODIFY
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {category.description}
-                  </TableCell>
-                  <TableCell className="text-center">
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              PUBLISHED DATE
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              TITLE
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              CATEGORY
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground w-24 text-center">
+              DELETE
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground w-24 text-center">
+              MODIFY
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {posts.map((post) => (
+            <TableRow key={post.id}>
+              <TableCell className="text-muted-foreground">
+                {moment(post.created_at).format("YYYY-MM-DD")}
+              </TableCell>
+              <TableCell className="font-medium">{post.title}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {post.category}
+              </TableCell>
+              <TableCell className="text-center">
+                <Dialog>
+                  <DialogTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -178,8 +115,13 @@ export default function Dashboard() {
                     >
                       <Trash2Icon className="h-5 w-5" />
                     </Button>
-                  </TableCell>
-                  <TableCell className="text-center">
+                  </DialogTrigger>
+                  <DeleteBlogDialog id={post.id} />
+                </Dialog>
+              </TableCell>
+              <TableCell className="text-center">
+                <Dialog>
+                  <DialogTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -187,15 +129,21 @@ export default function Dashboard() {
                     >
                       <PencilIcon className="h-5 w-5" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+                  </DialogTrigger>
+                  <EditBlogDialogContent {...post} />
+                </Dialog>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
       <div className="mt-4 px-2">
-        <Pagination totalItems={22} itemsPerPage={15} />
+        <Pagination
+          totalItems={totalItems}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </AdminLayout>
   );

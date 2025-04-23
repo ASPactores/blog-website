@@ -24,8 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useApi } from "@/hooks/use-api";
+import { useRouter } from "next/navigation";
 
-// Define the form schema with zod
 const formSchema = z.object({
   title: z
     .string()
@@ -60,37 +61,67 @@ const categories = [
   { id: "education", name: "Education" },
 ];
 
-export function BlogForm({
-  onSubmit,
-}: {
-  onSubmit?: (values: z.infer<typeof formSchema>) => void;
-}) {
-  // Initialize the form
+export interface Post {
+  id?: string;
+  title?: string;
+  content?: string;
+  category?: string;
+  created_at?: string;
+}
+
+export function BlogForm(post?: Post | null) {
+  const { callAPI } = useApi();
+  const router = useRouter();
+  const updatePost = post && post.id ? true : false;
+  const defaultValues = post
+    ? {
+        title: post.title,
+        content: post.content,
+        category: post.category,
+      }
+    : {
+        title: "",
+        content: "",
+        category: "",
+      };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      content: "",
-      category: "",
-    },
+    defaultValues: defaultValues,
   });
-  function handleSubmit(values: z.infer<typeof formSchema>) {
-    if (onSubmit) {
-      onSubmit(values);
-    } else {
-      toast("Blog post created!", {
-        description: (
-          <span style={{ color: "black" }}>
-            Your blog post has been created successfully.
-          </span>
-        ),
-      });
+  const onFormSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await callAPI("/blog/create", "POST", values, {}, true);
+      toast.success("Blog post created successfully!");
+      router.push("/admin/dashboard");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
     }
-  }
+  };
+
+  const onFormUpdate = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await callAPI(`/blog/edit/${post?.id}`, "PUT", values, {}, true);
+      toast.success("Blog post updated successfully!");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
+    }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+      <form
+        onSubmit={form.handleSubmit(updatePost ? onFormUpdate : onFormSubmit)}
+        className="space-y-8"
+      >
         <FormField
           control={form.control}
           name="title"
@@ -157,7 +188,9 @@ export function BlogForm({
           )}
         />
 
-        <Button type="submit">Create Blog Post</Button>
+        <Button type="submit">
+          {updatePost ? "Update Blog Post" : "Create Blog Post"}
+        </Button>
       </form>
     </Form>
   );
