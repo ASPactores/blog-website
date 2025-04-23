@@ -25,3 +25,7 @@ class BlogPostSchemaInDB(BlogPostSchema):
     author_id: UUID
     created_at: datetime
     updated_at: Optional[datetime] = None
+
+class IndividualBlogPostSchema(BlogPostSchemaInDB):
+    author_first_name: str
+    author_last_name: str

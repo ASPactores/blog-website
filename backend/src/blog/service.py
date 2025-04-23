@@ -10,7 +10,7 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 
 
 
-from .schema import BlogPostSchema, BlogPostSchemaInDB
+from .schema import BlogPostSchema, BlogPostSchemaInDB, IndividualBlogPostSchema
 
 def create_blog_post(
     blog_post: BlogPostSchema, db: Annotated[Session, Depends(get_db)], user_id: str
@@ -48,17 +48,33 @@ def get_all_blog_posts(db: Annotated[Session, Depends(get_db)]) -> Page[BlogPost
 
 def get_blog_post_by_id(
     db: Annotated[Session, Depends(get_db)], post_id: str
-) -> BlogPostSchemaInDB:
+) -> IndividualBlogPostSchema:
     """
     Get a blog post by its ID.
     """
     post = db.query(BlogPost).filter(BlogPost.id == post_id).first()
+    if post:
+        author = db.query(User).filter(User.id == post.author_id).first()
+        if author:
+            post.author_first_name = author.first_name
+            post.author_last_name = author.last_name
     if not post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Blog post not found",
         )
-    return post
+    print(f"Post: {post}")
+    return IndividualBlogPostSchema(
+        id=post.id,
+        title=post.title,
+        content=post.content,
+        author_id=post.author_id,
+        author_first_name=post.author_first_name,
+        author_last_name=post.author_last_name,
+        created_at=post.created_at,
+        updated_at=post.updated_at,
+        category=post.category,
+    )
 
 def get_self_blog_posts(
     db: Annotated[Session, Depends(get_db)], user_id: str

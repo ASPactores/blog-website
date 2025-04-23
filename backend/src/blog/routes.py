@@ -8,7 +8,7 @@ from fastapi_pagination import Page, LimitOffsetPage
 
 
 from .service import create_blog_post, delete_blog_post, edit_blog_post, get_all_blog_posts, get_blog_post_by_id, get_self_blog_posts
-from .schema import BlogPostSchema, BlogPostSchemaInDB
+from .schema import BlogPostSchema, BlogPostSchemaInDB, IndividualBlogPostSchema
 
 
 
@@ -62,11 +62,11 @@ def get_all_posts(
             headers={"Content-Type": "application/json"},
         )
 
-@router.get("/posts/{post_id}", response_model=BlogPostSchemaInDB)
+@router.get("/posts/{post_id}", response_model=IndividualBlogPostSchema)
 def get_post_by_id(
     post_id: str,
     db: Annotated[Session, Depends(get_db)]
-) -> BlogPostSchemaInDB:
+) -> IndividualBlogPostSchema:
     """
     Get a blog post by its ID.
     """
@@ -137,7 +137,7 @@ def edit_post(
             headers={"Content-Type": "application/json"},
         )
 
-@router.delete("/delete/{post_id}")
+@router.delete("/delete/{post_id}", response_model=BlogPostSchemaInDB)
 def delete_post(
     post_id: str,
     user: Annotated[dict, Depends(validate_token)],
