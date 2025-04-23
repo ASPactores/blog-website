@@ -44,7 +44,7 @@ export default function Dashboard() {
 
     try {
       const data = await callAPI<null, { items: Post[]; total: number }>(
-        `/blog/posts?limit=${limit}&offset=${offset}`,
+        `/blog/self/posts?limit=${limit}&offset=${offset}`,
         "GET",
         undefined,
         undefined,

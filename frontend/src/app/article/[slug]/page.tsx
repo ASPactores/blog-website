@@ -12,6 +12,8 @@ type BlogPost = {
   content: string;
   category: string;
   author: string;
+  author_first_name: string;
+  author_last_name: string;
   created_at: string;
 };
 
@@ -83,7 +85,9 @@ export default async function BlogPostPage({
             </span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
-          <p className="text-sm text-muted-foreground">By {post.author}</p>
+          <p className="text-sm text-muted-foreground">
+            By {post.author_first_name} {post.author_last_name}
+          </p>
           <Separator />
         </CardHeader>
         <CardContent className="prose prose-gray max-w-none">

@@ -10,7 +10,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 
-import { loginUser } from "@/actions/login"; // Adjust the import path as necessary
+import { loginUser } from "@/actions/login";
+import { signUpUser } from "@/actions/sign-up";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -70,9 +71,21 @@ export default function AdminLoginForm() {
   };
 
   const onSignupSubmit = (data: SignupFormValues) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { confirmPassword, ...signupData } = data;
-    console.log("Signup Data:", signupData);
+    try {
+      signUpUser({
+        firstName: data.first_name,
+        lastName: data.last_name,
+        email: data.email,
+        password: data.password,
+      });
+      toast.success("Sign up successful! You may now log in.");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
+    }
   };
 
   return (
