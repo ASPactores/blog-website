@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import Depends, HTTPException, status
 from typing import List, Annotated
-from fastapi_pagination import Page, add_pagination, paginate
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 
 
 
@@ -54,3 +55,58 @@ def get_self_blog_posts(
             detail="No blog posts found for this user",
         )
     return posts
+
+def edit_blog_post(
+    db: Annotated[Session, Depends(get_db)],
+    post_id: str,
+    blog_post: BlogPostSchema,
+    user_id: str,
+) -> BlogPostSchemaInDB:
+    """
+    Edit an existing blog post in the database.
+    """
+    post = db.query(BlogPost).filter(BlogPost.id == post_id).first()
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
+        )
+
+    if post.author_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to edit this blog post",
+        )
+
+    post.title = blog_post.title
+    post.content = blog_post.content
+    post.category = blog_post.category
+
+    db.commit()
+    db.refresh(post)
+
+    return post
+
+def delete_blog_post(
+    db: Annotated[Session, Depends(get_db)], post_id: str, user_id: str
+) -> BlogPostSchemaInDB:
+    """
+    Delete a blog post from the database.
+    """
+    post = db.query(BlogPost).filter(BlogPost.id == post_id).first()
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
+        )
+
+    if post.author_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to delete this blog post",
+        )
+
+    db.delete(post)
+    db.commit()
+
+    return post

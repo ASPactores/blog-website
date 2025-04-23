@@ -3,12 +3,13 @@ from datetime import datetime, timedelta
 from typing import Annotated
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
+from cache import redis_client
 
 from database import get_db
 from models import User
 
 from constants import JWTConfig
-from .utils import hash_password, verify_password, create_jwt_token
+from .utils import hash_password, verify_password, create_jwt_token, blacklist_token
 from .schema import UserSchema, Login, LoginResponse, AccessToken
 
 
@@ -82,6 +83,9 @@ def refresh_token(token: str, db: Annotated[Session, Depends(get_db)]):
     Refresh the access token using the refresh token.
     """
     try:
+        if redis_client.exists(f"blacklist_refresh_token:{token}"):
+            raise HTTPException(status_code=401, detail="Expired token")
+        
         payload = jwt.decode(
             token,
             JWTConfig.SECRET_KEY,
@@ -107,3 +111,18 @@ def refresh_token(token: str, db: Annotated[Session, Depends(get_db)]):
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+def logout_user(access_token: str, refresh_token: str):
+    """
+    Logout the user by blacklisting the tokens.
+    """
+    try:
+        print("Hello World! ")
+        print("Blacklisting tokens...", redis_client.get(f"blacklist_access_token:{access_token}"))
+        print("Blacklisting tokens...", redis_client.exists(f"blacklist_refresh_token:{refresh_token}"))
+        blacklist_token(access_token, refresh_token)
+        return {"message": "User logged out successfully"}
+    except Exception as e:
+        print(f"Error blacklisting tokens: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while logging out")
+    

@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Annotated
 from database import get_db
-from .schema import UserSchema, Login, GenericResponse, RefreshToken, AccessToken, LoginResponse
-from .service import create_new_user, sign_in_user, refresh_token
+from .schema import UserSchema, Login, GenericResponse, RefreshToken, AccessToken, LoginResponse, Token
+from .service import create_new_user, logout_user, sign_in_user, refresh_token
 
 router = APIRouter(
     prefix="/auth",
@@ -48,4 +48,26 @@ def refresh(token: RefreshToken, db: Annotated[Session, Depends(get_db)]):
         return JSONResponse(
             content={"message": e.detail},
             status_code=e.status_code,
+        )
+
+@router.post("/logout", response_model=GenericResponse)
+def logout(token: Token, db: Annotated[Session, Depends(get_db)]):
+    """
+    Logout the user by blacklisting the refresh token.
+    """
+    try:
+        logout_user(token.access_token, token.refresh_token)
+        return JSONResponse(
+            content={"message": "User logged out successfully"},
+            status_code=200,
+        )
+    except HTTPException as e:
+        return JSONResponse(
+            content={"message": e.detail},
+            status_code=e.status_code,
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"message": "An error occurred while logging out"},
+            status_code=500,
         )

@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import Depends
 from database import get_db
 from models import User
+from cache import redis_client
 
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
@@ -28,6 +29,12 @@ async def validate_token(
         )
     
     token = credentials.credentials
+    if redis_client.exists(f"blacklist_access_token:{token}"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     try:
         # Decode and verify the token
@@ -39,7 +46,6 @@ async def validate_token(
         
         # Extract user ID from payload
         user_id = payload.get("sub")
-        print(f"User ID from token: {user_id}")
         if not user_id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
