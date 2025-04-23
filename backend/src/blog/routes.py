@@ -7,7 +7,7 @@ from fastapi_pagination import Page, LimitOffsetPage
 
 
 
-from .service import create_blog_post, delete_blog_post, edit_blog_post, get_all_blog_posts, get_self_blog_posts
+from .service import create_blog_post, delete_blog_post, edit_blog_post, get_all_blog_posts, get_blog_post_by_id, get_self_blog_posts
 from .schema import BlogPostSchema, BlogPostSchemaInDB
 
 
@@ -59,6 +59,27 @@ def get_all_posts(
         raise HTTPException(
             status_code=500,
             detail="An error occurred while fetching the blog posts",
+            headers={"Content-Type": "application/json"},
+        )
+
+@router.get("/posts/{post_id}", response_model=BlogPostSchemaInDB)
+def get_post_by_id(
+    post_id: str,
+    db: Annotated[Session, Depends(get_db)]
+) -> BlogPostSchemaInDB:
+    """
+    Get a blog post by its ID.
+    """
+    try:
+        post = get_blog_post_by_id(db=db, post_id=post_id)
+        return post
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error fetching blog post by ID: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while fetching the blog post",
             headers={"Content-Type": "application/json"},
         )
 

@@ -46,6 +46,20 @@ def get_all_blog_posts(db: Annotated[Session, Depends(get_db)]) -> Page[BlogPost
     posts = paginate(db, select(BlogPost).order_by(BlogPost.created_at.desc()))
     return posts
 
+def get_blog_post_by_id(
+    db: Annotated[Session, Depends(get_db)], post_id: str
+) -> BlogPostSchemaInDB:
+    """
+    Get a blog post by its ID.
+    """
+    post = db.query(BlogPost).filter(BlogPost.id == post_id).first()
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
+        )
+    return post
+
 def get_self_blog_posts(
     db: Annotated[Session, Depends(get_db)], user_id: str
 ) -> List[BlogPostSchemaInDB]:
