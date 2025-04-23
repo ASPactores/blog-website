@@ -9,7 +9,6 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 
 
 
-from sqlalchemy import func
 
 from .schema import BlogPostSchema, BlogPostSchemaInDB
 
@@ -30,7 +29,15 @@ def create_blog_post(
     db.commit()
     db.refresh(new_blog_post)
 
-    return new_blog_post
+    return BlogPostSchemaInDB(
+        id=new_blog_post.id,
+        title=new_blog_post.title,
+        content=new_blog_post.content,
+        author_id=new_blog_post.author_id,
+        created_at=new_blog_post.created_at,
+        updated_at=new_blog_post.updated_at,
+        category=new_blog_post.category,
+    )
 
 def get_all_blog_posts(db: Annotated[Session, Depends(get_db)]) -> Page[BlogPostSchemaInDB]:
     """

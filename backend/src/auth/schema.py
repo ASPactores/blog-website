@@ -35,5 +35,6 @@ class RefreshToken(BaseModel):
 class GenericResponse(BaseModel):
     message: str
 
-class Token(AccessToken, RefreshToken):
-    pass
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str

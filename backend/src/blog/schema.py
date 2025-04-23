@@ -1,16 +1,27 @@
-from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
+from typing import Optional
+from uuid import UUID
+from pydantic import BaseModel, Field
 from enum import Enum
 
 class CategoryEnum(str, Enum):
-    TECHNOLOGY = "Technology"
-    LIFESTYLE = "Lifestyle"
-    EDUCATION = "Education"
-    HEALTH = "Health"
+    TECHNOLOGY = "technology"
+    HEALTH = "health"
+    FINANCE = "finance"
+    LIFESTYLE = "lifestyle"
+    TRAVEL = "travel"
+    FOOD = "food"
+    BUSINESS = "business"
+    EDUCATION = "education"
+    
 
 class BlogPostSchema(BaseModel):
-    title: str = Field(..., min_length=1, max_length=255)
+    title: str
     content: str = Field(..., min_length=1)
     category: CategoryEnum
     
 class BlogPostSchemaInDB(BlogPostSchema):
-    pass
+    id: UUID
+    author_id: UUID
+    created_at: datetime
+    updated_at: Optional[datetime] = None
