@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -7,71 +9,57 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useApi } from "@/hooks/use-api";
+import moment from "moment";
+import { Skeleton } from "@/components/ui/skeleton"; // Import ShadCN Skeleton component
 
-export default function BlogPage() {
-  const blogPosts = [
-    {
-      id: 1,
-      category: "Blog articles",
-      title: "5 principles of an ideal SEO team structure",
-      description:
-        "There is a method to (re)structuring an SEO team. In this article, I explain the 5 guiding principles to...",
-      date: "Oct 19, 2021",
-      readTime: "4 min read",
-      slug: "seo-team-structure",
-    },
-    {
-      id: 2,
-      category: "Blog articles",
-      title: "My Growth predictions for 2021",
-      description:
-        "In this post, I review my predictions for 2020 and set new ones for 2021.",
-      date: "Jan 4, 2021",
-      readTime: "10 min read",
-      slug: "growth-predictions-2021",
-    },
-    {
-      id: 3,
-      category: "serp features",
-      title: "The impact of image SERP Features on traffic",
-      description:
-        "Image Boxes and Image Thumbnails are two of the most shown SERP Features. One of them drains a...",
-      date: "Nov 16, 2020",
-      readTime: "4 min read",
-      slug: "image-serp-features-impact",
-    },
-    {
-      id: 4,
-      category: "Blog articles",
-      title: "SEO Performance Tracking",
-      description:
-        "Learn how to effectively track and measure your SEO performance with these proven methods.",
-      date: "Dec 5, 2021",
-      readTime: "6 min read",
-      slug: "seo-performance-tracking",
-    },
-    {
-      id: 5,
-      category: "Analytics",
-      title: "Understanding Core Web Vitals",
-      description:
-        "A deep dive into Core Web Vitals and how they affect your website's performance and ranking.",
-      date: "Feb 12, 2022",
-      readTime: "8 min read",
-      slug: "core-web-vitals",
-    },
-    {
-      id: 6,
-      category: "Tech",
-      title: "The Future of JavaScript Frameworks",
-      description:
-        "Exploring the evolution and future directions of popular JavaScript frameworks in web development.",
-      date: "Mar 30, 2022",
-      readTime: "7 min read",
-      slug: "javascript-frameworks-future",
-    },
-  ];
+interface BlogPost {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  created_at: string;
+}
+
+interface PaginatedResponse {
+  items: BlogPost[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export default function BlogMainPage() {
+  const { callAPI, error } = useApi();
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(4);
+  const pageSize = 6;
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await callAPI<undefined, PaginatedResponse>(
+          `/blog/posts?limit=${pageSize}&offset=${(page - 1) * pageSize}`,
+          "GET"
+        );
+        setPosts(res.items);
+        setTotalPages(Math.ceil(res.total / pageSize));
+      } catch (e) {
+        console.error("Failed to load blog posts:", e);
+      }
+    }
+
+    fetchData();
+  }, [callAPI, page]);
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
@@ -80,40 +68,93 @@ export default function BlogPage() {
           Blog articles
         </h1>
         <p className="text-muted-foreground text-lg">
-          Blog articles about SEO, Tech, leadership, and Growth.
+          This website contains articles about a variety of topics, including
+          Tech, Health, and Lifestyle.
         </p>
       </div>
 
+      {/* Error message */}
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+
+      {/* Blog post cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {blogPosts.map((post) => (
-          <Link
-            href={`/blog/${post.slug}`}
-            key={post.id}
-            className="block group"
-          >
-            <Card className="h-full transition-all hover:shadow-md">
-              <CardHeader className="pb-2">
-                <Badge variant="outline" className="w-fit mb-2">
-                  {post.category}
-                </Badge>
-                <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors">
-                  {post.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-sm text-muted-foreground line-clamp-3">
-                  {post.description}
-                </CardDescription>
-              </CardContent>
-              <CardFooter className="text-xs text-muted-foreground pt-0">
-                <div className="flex items-center gap-2">
-                  <span>{post.date}</span>
-                </div>
-              </CardFooter>
-            </Card>
-          </Link>
-        ))}
+        {posts.length === 0
+          ? // Skeleton loader while fetching data
+            Array.from({ length: pageSize }).map((_, index) => (
+              <div key={index} className="w-full">
+                <Card className="h-full transition-all hover:shadow-md">
+                  <CardHeader className="pb-2">
+                    <Skeleton className="w-24 h-4 mb-2" />
+                    <Skeleton className="w-48 h-6" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-4 mb-2" />
+                    <Skeleton className="h-4 mb-2" />
+                  </CardContent>
+                  <CardFooter className="text-xs text-muted-foreground pt-0">
+                    <Skeleton className="h-4 w-16" />
+                  </CardFooter>
+                </Card>
+              </div>
+            ))
+          : posts.map((post) => {
+              const description = post.content.slice(0, 160);
+
+              return (
+                <Link
+                  href={`/article/${post.id}`}
+                  key={post.id}
+                  className="block group"
+                >
+                  <Card className="h-full transition-all hover:shadow-md">
+                    <CardHeader className="pb-2">
+                      <Badge variant="outline" className="w-fit mb-2">
+                        {post.category}
+                      </Badge>
+                      <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors">
+                        {post.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-sm text-muted-foreground line-clamp-3">
+                        {description}
+                        {post.content.length > 160 && "..."}
+                      </CardDescription>
+                    </CardContent>
+                    <CardFooter className="text-xs text-muted-foreground pt-0">
+                      <span>
+                        <span>
+                          {moment(post.created_at).format("MMM D, YYYY")}
+                        </span>
+                      </span>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              );
+            })}
       </div>
+
+      <Pagination className="mt-10 ">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              className={page === 1 ? "pointer-events-none opacity-50" : ""}
+            />
+          </PaginationItem>
+          <PaginationItem>
+            <span className="text-sm px-4">{`Page ${page} of ${totalPages}`}</span>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              className={
+                page === totalPages ? "pointer-events-none opacity-50" : ""
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }
