@@ -8,7 +8,6 @@ services:
       - "8000:8000"
     volumes:
       - ./migrations:/app/migrations
-      # - models.py:/app/models.py
     networks:
       - backend_network
     depends_on:
