@@ -23,7 +23,6 @@ export function useApi() {
 
       try {
         const accessToken = await getCookie("access_token");
-        console.log("Access Token:", accessToken);
 
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}${url}`,
@@ -38,8 +37,6 @@ export function useApi() {
             body: body ? JSON.stringify(body) : undefined,
           }
         );
-
-        console.log("Response Status:", response.status);
 
         if (response.status === 401) {
           try {
