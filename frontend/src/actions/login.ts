@@ -22,8 +22,14 @@ export async function loginUser(email: string, password: string) {
       }
     );
 
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to log in");
+    }
+
     const { access_token, refresh_token, uid, access_token_expiry } =
-      (await response.json()) as LoginResponse;
+      data as LoginResponse;
 
     const cookieStore = await cookies();
 

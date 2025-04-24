@@ -1,5 +1,3 @@
-// "use server";
-
 import React from "react";
 import AdminLoginForm from "@/components/admin-login-form";
 

@@ -15,20 +15,29 @@ export default function AppSidebar() {
   const router = useRouter();
   const { callAPI } = useApi();
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     try {
-      const accessToken = getCookie("access_token");
-      const refreshToken = getCookie("refresh_token");
+      const accessToken = await getCookie("access_token");
+      const refreshToken = await getCookie("refresh_token");
       const body = {
         access_token: accessToken,
         refresh_token: refreshToken,
       };
 
-      callAPI("/auth/logout", "POST", body, undefined, false);
+      await callAPI(
+        "/auth/logout",
+        "POST",
+        body,
+        {
+          "Content-Type": "application/json",
+        },
+        false,
+        false
+      );
 
-      deleteCookie("access_token");
-      deleteCookie("refresh_token");
-      deleteCookie("user_id");
+      await deleteCookie("access_token");
+      await deleteCookie("refresh_token");
+      await deleteCookie("uid");
 
       router.push("/admin");
     } catch (error) {

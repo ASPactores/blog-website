@@ -63,6 +63,14 @@ export default function BlogMainPage() {
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
+      <div className="flex justify-end mb-4">
+        <Link
+          href="/admin"
+          className="text-sm text-muted-foreground hover:text-primary underline transition-colors"
+        >
+          Admin Login
+        </Link>
+      </div>
       <div className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight mb-2">
           Blog articles
@@ -73,14 +81,11 @@ export default function BlogMainPage() {
         </p>
       </div>
 
-      {/* Error message */}
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
-      {/* Blog post cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.length === 0
-          ? // Skeleton loader while fetching data
-            Array.from({ length: pageSize }).map((_, index) => (
+          ? Array.from({ length: pageSize }).map((_, index) => (
               <div key={index} className="w-full">
                 <Card className="h-full transition-all hover:shadow-md">
                   <CardHeader className="pb-2">
