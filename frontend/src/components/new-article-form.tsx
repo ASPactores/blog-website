@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 import { useRouter } from "next/navigation";
+import { Post } from "@/lib/types";
 
 const formSchema = z.object({
   title: z
@@ -60,14 +61,6 @@ const categories = [
   { id: "business", name: "Business" },
   { id: "education", name: "Education" },
 ];
-
-export interface Post {
-  id?: string;
-  title?: string;
-  content?: string;
-  category?: string;
-  created_at?: string;
-}
 
 export function BlogForm(post?: Post | null) {
   const { callAPI } = useApi();

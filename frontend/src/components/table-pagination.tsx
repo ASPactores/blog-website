@@ -9,18 +9,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-interface PaginationProps {
-  totalItems: number;
-  itemsPerPage: number;
-  onPageChange: (page: number) => void;
-}
+import { TablePaginationProps } from "@/lib/types";
 
 export function Pagination({
   totalItems,
   itemsPerPage,
   onPageChange,
-}: PaginationProps) {
+}: TablePaginationProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 

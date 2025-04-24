@@ -20,26 +20,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useApi } from "@/hooks/use-api";
 import moment from "moment";
-import { Skeleton } from "@/components/ui/skeleton"; // Import ShadCN Skeleton component
-
-interface BlogPost {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  created_at: string;
-}
-
-interface PaginatedResponse {
-  items: BlogPost[];
-  total: number;
-  page: number;
-  size: number;
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import { Post, PaginatedResponse } from "@/lib/types";
 
 export default function BlogMainPage() {
   const { callAPI, error } = useApi();
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(4);
   const pageSize = 6;
@@ -103,7 +89,7 @@ export default function BlogMainPage() {
               </div>
             ))
           : posts.map((post) => {
-              const description = post.content.slice(0, 160);
+              const description = (post.content ?? "").slice(0, 160);
 
               return (
                 <Link
@@ -123,7 +109,7 @@ export default function BlogMainPage() {
                     <CardContent>
                       <CardDescription className="text-sm text-muted-foreground line-clamp-3">
                         {description}
-                        {post.content.length > 160 && "..."}
+                        {(post.content ?? "").length > 160 && "..."}
                       </CardDescription>
                     </CardContent>
                     <CardFooter className="text-xs text-muted-foreground pt-0">

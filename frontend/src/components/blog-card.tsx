@@ -8,20 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-
-interface BlogPost {
-  id: number;
-  category: string;
-  title: string;
-  description: string;
-  date: string;
-  readTime: string;
-  slug: string;
-}
-
-interface BlogCardProps {
-  post: BlogPost;
-}
+import { BlogCardProps } from "@/lib/types";
 
 export function BlogCard({ post }: BlogCardProps) {
   return (

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft } from "lucide-react";
+import { calculateReadTime } from "@/lib/utils";
 import Link from "next/link";
 import moment from "moment";
 
@@ -15,14 +16,6 @@ type BlogPost = {
   author_first_name: string;
   author_last_name: string;
   created_at: string;
-};
-
-// Function to calculate the read time based on content length
-const calculateReadTime = (content: string): string => {
-  const words = content.split(/\s+/).length;
-  const wordsPerMinute = 250;
-  const minutes = Math.ceil(words / wordsPerMinute);
-  return `${minutes} min read`;
 };
 
 const fetchPost = async (slug: string): Promise<BlogPost | null> => {
