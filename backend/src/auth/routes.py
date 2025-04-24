@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Annotated
 from database import get_db
+from logger import logger
 from .schema import UserSchema, Login, GenericResponse, RefreshToken, AccessToken, LoginResponse, Token
 from .service import create_new_user, logout_user, sign_in_user, refresh_token
 
@@ -15,6 +16,7 @@ router = APIRouter(
 def sign_up(user: UserSchema, db: Annotated[Session, Depends(get_db)]):
     try:
         create_new_user(user, db)
+        logger.info(f"User {user.email} created successfully")
         return JSONResponse(
             content={"message": "User created successfully"},
             status_code=200,
@@ -29,6 +31,7 @@ def sign_up(user: UserSchema, db: Annotated[Session, Depends(get_db)]):
 def sign_in(user: Login, db: Annotated[Session, Depends(get_db)]):
     try:
         signed_in_user = sign_in_user(user, db)
+        logger.info(f"User {user.email} signed in successfully")
         return signed_in_user
     except HTTPException as e:
         return JSONResponse(
@@ -57,6 +60,7 @@ def logout(token: Token, db: Annotated[Session, Depends(get_db)]):
     """
     try:
         logout_user(token.access_token, token.refresh_token)
+        logger.info(f"User logged out successfully")
         return JSONResponse(
             content={"message": "User logged out successfully"},
             status_code=200,

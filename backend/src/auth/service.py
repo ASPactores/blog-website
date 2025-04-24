@@ -109,7 +109,7 @@ def refresh_token(token: str, db: Annotated[Session, Depends(get_db)]):
         return AccessToken(access_token=new_access_token, access_token_expires=JWTConfig.ACCESS_TOKEN_EXPIRE_MINUTES * 60) # Convert minutes to seconds
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.JWTError:
+    except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 def logout_user(access_token: str, refresh_token: str):
@@ -117,9 +117,6 @@ def logout_user(access_token: str, refresh_token: str):
     Logout the user by blacklisting the tokens.
     """
     try:
-        print("Hello World! ")
-        print("Blacklisting tokens...", redis_client.get(f"blacklist_access_token:{access_token}"))
-        print("Blacklisting tokens...", redis_client.exists(f"blacklist_refresh_token:{refresh_token}"))
         blacklist_token(access_token, refresh_token)
         return {"message": "User logged out successfully"}
     except Exception as e:
