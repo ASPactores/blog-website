@@ -10,10 +10,14 @@ import { DialogDescription } from "@radix-ui/react-dialog";
 import { useApi } from "@/hooks/use-api";
 import { toast } from "sonner";
 
-export function DeleteBlogDialog({ id }: { id: string }) {
+export function DeleteBlogDialog({ id = "" }: { id?: string }) {
   const { callAPI } = useApi();
   const handleDelete = async () => {
     try {
+      if (!id) {
+        toast.error("Blog ID is required to delete the blog.");
+        return;
+      }
       await callAPI(`/blog/delete/${id}`, "DELETE", undefined, undefined, true);
       toast.success("Blog deleted successfully!");
     } catch (error) {
