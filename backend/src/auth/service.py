@@ -31,7 +31,6 @@ def create_new_user(user: UserSchema, db: Annotated[Session, Depends(get_db)]):
         password=hashed_password,
     )
 
-    # Add the user to the database
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -51,6 +50,7 @@ def authenticate_user(user_credentials: Login, db: Annotated[Session, Depends(ge
         )
 
     return user
+
 
 def sign_in_user(user: Login, db: Annotated[Session, Depends(get_db)]):
     """
@@ -75,8 +75,10 @@ def sign_in_user(user: Login, db: Annotated[Session, Depends(get_db)]):
         access_token=access_token,
         refresh_token=refresh_token,
         uid=str(existing_user.id),
-        access_token_expires=JWTConfig.ACCESS_TOKEN_EXPIRE_MINUTES * 60, # Convert minutes to seconds
+        access_token_expires=JWTConfig.ACCESS_TOKEN_EXPIRE_MINUTES
+        * 60,  # Convert minutes to seconds
     )
+
 
 def refresh_token(token: str, db: Annotated[Session, Depends(get_db)]):
     """
@@ -85,7 +87,7 @@ def refresh_token(token: str, db: Annotated[Session, Depends(get_db)]):
     try:
         if redis_client.exists(f"blacklist_refresh_token:{token}"):
             raise HTTPException(status_code=401, detail="Expired token")
-        
+
         payload = jwt.decode(
             token,
             JWTConfig.SECRET_KEY,
@@ -106,11 +108,15 @@ def refresh_token(token: str, db: Annotated[Session, Depends(get_db)]):
             expires_delta=access_token_expires,
         )
 
-        return AccessToken(access_token=new_access_token, access_token_expires=JWTConfig.ACCESS_TOKEN_EXPIRE_MINUTES * 60) # Convert minutes to seconds
+        return AccessToken(
+            access_token=new_access_token,
+            access_token_expires=JWTConfig.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )  # Convert minutes to seconds
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
 
 def logout_user(access_token: str, refresh_token: str):
     """
@@ -121,5 +127,6 @@ def logout_user(access_token: str, refresh_token: str):
         return {"message": "User logged out successfully"}
     except Exception as e:
         print(f"Error blacklisting tokens: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while logging out")
-    
+        raise HTTPException(
+            status_code=500, detail="An error occurred while logging out"
+        )

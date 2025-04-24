@@ -6,7 +6,14 @@ from database import get_db
 from fastapi_pagination import Page, LimitOffsetPage
 from logger import logger
 
-from .service import create_blog_post, delete_blog_post, edit_blog_post, get_all_blog_posts, get_blog_post_by_id, get_self_blog_posts
+from .service import (
+    create_blog_post,
+    delete_blog_post,
+    edit_blog_post,
+    get_all_blog_posts,
+    get_blog_post_by_id,
+    get_self_blog_posts,
+)
 from .schema import BlogPostSchema, BlogPostSchemaInDB, IndividualBlogPostSchema
 
 router = APIRouter(
@@ -14,18 +21,19 @@ router = APIRouter(
     tags=["blog"],
 )
 
+
 @router.post("/create", response_model=BlogPostSchemaInDB)
 def create_post(
     blog_post: BlogPostSchema,
     user: Annotated[dict, Depends(validate_token)],
-    db: Annotated[Session, Depends(get_db)]
+    db: Annotated[Session, Depends(get_db)],
 ):
     try:
         user_id = user.id
-        
+
         new_post = create_blog_post(blog_post=blog_post, db=db, user_id=user_id)
         logger.info(f"Blog post {new_post.id} created successfully by user {user_id}")
-        
+
         return new_post
     except HTTPException as e:
         raise e
@@ -39,9 +47,7 @@ def create_post(
 
 
 @router.get("/posts", response_model=LimitOffsetPage[BlogPostSchemaInDB])
-def get_all_posts(
-    db: Annotated[Session, Depends(get_db)]
-) -> Page[BlogPostSchemaInDB]:
+def get_all_posts(db: Annotated[Session, Depends(get_db)]) -> Page[BlogPostSchemaInDB]:
     """
     Get all blog posts from the database.
     """
@@ -58,10 +64,10 @@ def get_all_posts(
             headers={"Content-Type": "application/json"},
         )
 
+
 @router.get("/posts/{post_id}", response_model=IndividualBlogPostSchema)
 def get_post_by_id(
-    post_id: str,
-    db: Annotated[Session, Depends(get_db)]
+    post_id: str, db: Annotated[Session, Depends(get_db)]
 ) -> IndividualBlogPostSchema:
     """
     Get a blog post by its ID.
@@ -80,18 +86,17 @@ def get_post_by_id(
             headers={"Content-Type": "application/json"},
         )
 
+
 @router.get("/self/posts", response_model=LimitOffsetPage[BlogPostSchemaInDB])
 def get_self_posts(
     user: Annotated[dict, Depends(validate_token)],
-    db: Annotated[Session, Depends(get_db)]
+    db: Annotated[Session, Depends(get_db)],
 ) -> Page[BlogPostSchemaInDB]:
     """
     Get all blog posts created by the authenticated user.
     """
     try:
-        self_posts = get_self_blog_posts(
-            db=db, user_id=user.id
-        )
+        self_posts = get_self_blog_posts(db=db, user_id=user.id)
         logger.info(f"Fetched self blog posts for user {user.id} successfully")
 
         return self_posts
@@ -105,12 +110,13 @@ def get_self_posts(
             headers={"Content-Type": "application/json"},
         )
 
+
 @router.put("/edit/{post_id}", response_model=BlogPostSchemaInDB)
 def edit_post(
     post_id: str,
     blog_post: BlogPostSchema,
     user: Annotated[dict, Depends(validate_token)],
-    db: Annotated[Session, Depends(get_db)]
+    db: Annotated[Session, Depends(get_db)],
 ) -> BlogPostSchemaInDB:
     """
     Edit a blog post in the database.
@@ -118,14 +124,13 @@ def edit_post(
     try:
         # Extract user ID from the validated token
         user_id = user.id
-        
-        # Edit the blog post using the service layer
+
         updated_post = edit_blog_post(
             db=db, post_id=post_id, blog_post=blog_post, user_id=user_id
         )
-        
+
         logger.info(f"Blog post {post_id} edited successfully by user {user_id}")
-        
+
         return updated_post
     except HTTPException as e:
         raise e
@@ -137,24 +142,25 @@ def edit_post(
             headers={"Content-Type": "application/json"},
         )
 
+
 @router.delete("/delete/{post_id}", response_model=BlogPostSchemaInDB)
 def delete_post(
     post_id: str,
     user: Annotated[dict, Depends(validate_token)],
-    db: Annotated[Session, Depends(get_db)]
+    db: Annotated[Session, Depends(get_db)],
 ) -> dict:
     """
     Delete a blog post from the database.
     """
     try:
         user_id = user.id
-        
+
         delete_blog_post_response = delete_blog_post(
             db=db, post_id=post_id, user_id=user_id
         )
-        
+
         logger.info(f"Blog post {post_id} deleted successfully by user {user_id}")
-        
+
         return delete_blog_post_response
     except HTTPException as e:
         raise e

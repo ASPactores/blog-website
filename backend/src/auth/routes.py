@@ -4,13 +4,22 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 from database import get_db
 from logger import logger
-from .schema import UserSchema, Login, GenericResponse, RefreshToken, AccessToken, LoginResponse, Token
+from .schema import (
+    UserSchema,
+    Login,
+    GenericResponse,
+    RefreshToken,
+    AccessToken,
+    LoginResponse,
+    Token,
+)
 from .service import create_new_user, logout_user, sign_in_user, refresh_token
 
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
 )
+
 
 @router.post("/sign-up", response_model=GenericResponse)
 def sign_up(user: UserSchema, db: Annotated[Session, Depends(get_db)]):
@@ -27,6 +36,7 @@ def sign_up(user: UserSchema, db: Annotated[Session, Depends(get_db)]):
             status_code=e.status_code,
         )
 
+
 @router.post("/sign-in", response_model=LoginResponse)
 def sign_in(user: Login, db: Annotated[Session, Depends(get_db)]):
     try:
@@ -38,6 +48,7 @@ def sign_in(user: Login, db: Annotated[Session, Depends(get_db)]):
             content={"message": e.detail},
             status_code=e.status_code,
         )
+
 
 @router.post("/refresh", response_model=AccessToken)
 def refresh(token: RefreshToken, db: Annotated[Session, Depends(get_db)]):
@@ -52,6 +63,7 @@ def refresh(token: RefreshToken, db: Annotated[Session, Depends(get_db)]):
             content={"message": e.detail},
             status_code=e.status_code,
         )
+
 
 @router.post("/logout", response_model=GenericResponse)
 def logout(token: Token, db: Annotated[Session, Depends(get_db)]):

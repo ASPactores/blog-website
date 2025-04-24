@@ -14,6 +14,7 @@ from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 token_key = APIKeyHeader(name="Authorization")
 
+
 async def validate_token(
     db: Annotated[Session, Depends(get_db)],
     credentials: HTTPAuthorizationCredentials = Security(HTTPBearer()),
@@ -27,7 +28,7 @@ async def validate_token(
             detail="Authentication credentials not provided",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     token = credentials.credentials
     if redis_client.exists(f"blacklist_access_token:{token}"):
         raise HTTPException(
@@ -35,7 +36,7 @@ async def validate_token(
             detail="Expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     try:
         # Decode and verify the token
         payload = jwt.decode(
@@ -43,7 +44,7 @@ async def validate_token(
             JWTConfig.SECRET_KEY,
             algorithms=[JWTConfig.ALGORITHM],
         )
-        
+
         # Extract user ID from payload
         user_id = payload.get("sub")
         if not user_id:
@@ -52,18 +53,18 @@ async def validate_token(
                 detail="Invalid token payload",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         # Fetch user from database
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found",
-                headers={"WWW-Authenticate": "Bearer"}, 
+                headers={"WWW-Authenticate": "Bearer"},
             )
-            
+
         return user
-        
+
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

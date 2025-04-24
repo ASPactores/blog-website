@@ -1,9 +1,6 @@
 from sqlalchemy.orm import DeclarativeBase, relationship
-from sqlalchemy import (
-    Column, ForeignKey, String, DateTime, UUID, func
-)
+from sqlalchemy import Column, ForeignKey, String, DateTime, UUID, func
 import uuid
-
 
 
 class Base(DeclarativeBase):
@@ -23,8 +20,10 @@ class User(Base):
     last_name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
-    
+
     posts = relationship("BlogPost", back_populates="author")
+
+
 class BlogPost(Base):
     """Blog post model."""
 

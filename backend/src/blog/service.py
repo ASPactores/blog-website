@@ -8,9 +8,8 @@ from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
 
-
-
 from .schema import BlogPostSchema, BlogPostSchemaInDB, IndividualBlogPostSchema
+
 
 def create_blog_post(
     blog_post: BlogPostSchema, db: Annotated[Session, Depends(get_db)], user_id: str
@@ -39,12 +38,16 @@ def create_blog_post(
         category=new_blog_post.category,
     )
 
-def get_all_blog_posts(db: Annotated[Session, Depends(get_db)]) -> Page[BlogPostSchemaInDB]:
+
+def get_all_blog_posts(
+    db: Annotated[Session, Depends(get_db)],
+) -> Page[BlogPostSchemaInDB]:
     """
     Get all blog posts from the database.
     """
     posts = paginate(db, select(BlogPost).order_by(BlogPost.created_at.desc()))
     return posts
+
 
 def get_blog_post_by_id(
     db: Annotated[Session, Depends(get_db)], post_id: str
@@ -76,6 +79,7 @@ def get_blog_post_by_id(
         category=post.category,
     )
 
+
 def get_self_blog_posts(
     db: Annotated[Session, Depends(get_db)], user_id: str
 ) -> List[BlogPostSchemaInDB]:
@@ -84,7 +88,9 @@ def get_self_blog_posts(
     """
     posts = paginate(
         db,
-        select(BlogPost).where(BlogPost.author_id == user_id).order_by(BlogPost.created_at.desc()),
+        select(BlogPost)
+        .where(BlogPost.author_id == user_id)
+        .order_by(BlogPost.created_at.desc()),
     )
     if not posts:
         raise HTTPException(
@@ -92,6 +98,7 @@ def get_self_blog_posts(
             detail="No blog posts found for this user",
         )
     return posts
+
 
 def edit_blog_post(
     db: Annotated[Session, Depends(get_db)],
@@ -123,6 +130,7 @@ def edit_blog_post(
     db.refresh(post)
 
     return post
+
 
 def delete_blog_post(
     db: Annotated[Session, Depends(get_db)], post_id: str, user_id: str
