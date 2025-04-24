@@ -4,13 +4,10 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 from database import get_db
 from fastapi_pagination import Page, LimitOffsetPage
-
-
+from logger import logger
 
 from .service import create_blog_post, delete_blog_post, edit_blog_post, get_all_blog_posts, get_blog_post_by_id, get_self_blog_posts
 from .schema import BlogPostSchema, BlogPostSchemaInDB, IndividualBlogPostSchema
-
-
 
 router = APIRouter(
     prefix="/blog",
@@ -24,11 +21,10 @@ def create_post(
     db: Annotated[Session, Depends(get_db)]
 ):
     try:
-        # Extract user ID from the validated token
         user_id = user.id
         
-        # Create a new blog post using the service layer
         new_post = create_blog_post(blog_post=blog_post, db=db, user_id=user_id)
+        logger.info(f"Blog post {new_post.id} created successfully by user {user_id}")
         
         return new_post
     except HTTPException as e:
@@ -72,6 +68,7 @@ def get_post_by_id(
     """
     try:
         post = get_blog_post_by_id(db=db, post_id=post_id)
+        logger.info(f"Fetched blog post {post_id} successfully")
         return post
     except HTTPException as e:
         raise e
@@ -95,6 +92,7 @@ def get_self_posts(
         self_posts = get_self_blog_posts(
             db=db, user_id=user.id
         )
+        logger.info(f"Fetched self blog posts for user {user.id} successfully")
 
         return self_posts
     except HTTPException as e:
@@ -126,6 +124,8 @@ def edit_post(
             db=db, post_id=post_id, blog_post=blog_post, user_id=user_id
         )
         
+        logger.info(f"Blog post {post_id} edited successfully by user {user_id}")
+        
         return updated_post
     except HTTPException as e:
         raise e
@@ -147,13 +147,13 @@ def delete_post(
     Delete a blog post from the database.
     """
     try:
-        # Extract user ID from the validated token
         user_id = user.id
         
-        # Delete the blog post using the service layer
         delete_blog_post_response = delete_blog_post(
             db=db, post_id=post_id, user_id=user_id
         )
+        
+        logger.info(f"Blog post {post_id} deleted successfully by user {user_id}")
         
         return delete_blog_post_response
     except HTTPException as e:
